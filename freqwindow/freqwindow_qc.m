@@ -295,7 +295,6 @@ for i=s(:)'
                         end
 
                         % plot raw filtered data beside good, clean records
-                        % bandvar = num2str((1:nfilt)','%02d')
                         fh=figure('name',['FREQWINDOW - ' events(i).name ...
                             ' - BAND ' num2str(j) ' - ' num2str(1/p.bank(j,1)) 's'],'color','k');
                         ax=makesubplots(1,2,1,'parent',fh);
