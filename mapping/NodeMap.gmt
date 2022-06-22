@@ -1,0 +1,85 @@
+#!/bin/csh
+
+# This is a script that makes the map using the GMT commands.
+# It writes out to a Postscript file (more on that later).
+# To get help with any of the modules. Type "gmt _______" on the command line.
+# substituting ______ with the module you want to use. e.g. gmt psxy.
+# gmt --show-modules will give you a list of all the available modules
+# each module has a massive ammount of options.
+# It is good to start with a working script (you can sometimes find some online)
+# and then modify it yourself.
+
+# Set up intial parameters. You can change a bunch of defaults here. Like default
+# units and size of the map (letter, poster, etc.).
+gmt gmtset MAP_FRAME_TYPE FANCY PROJ_LENGTH_UNIT CM FONT_ANNOT_PRIMARY 12
+gmt gmtset PS_MEDIA LETTER FONT_LABEL 12
+gmt gmtset MAP_FRAME_PEN 1 MAP_TICK_LENGTH_PRIMARY 0.1
+
+# The output will be a postscript file (.ps). This is a vector file.
+# Preview can open it as well as ghostview (gs in terminal). An added bonus
+# of is that Adobe Illustrator will be able to open it and you can manipulate it.
+set psfile=Nodes.ps
+
+#### Set location of files that will be used.
+# The XYZ file is a text file wiht lat, lon and elevation for the whole world.
+# I usually keep this file somewhere in my laptop and give it the full path to it.
+# similar to: set xyzfile=/Users/cristo/Documents/GMTstuff/World.xyz
+set xyzfile=World.xyz
+
+# The grd file is the grid file that gets created fromt the xyz. It is a mesh
+# that can add more or less detail depending on your needs for the map.
+set grdfile=AlaskaMap.grd
+
+# The .cpt is a file that contains the colors that the map will have
+set cptfile=AlaskaMap.cpt
+
+# This is the range of Lon and Lat that the whole map will be located on.
+set range=-170/-144/50/66
+
+# *** You will see a lot of the lines of code will have the flags -J -R -O -K -V with
+# some sort of option appended to it (or not). The -J is the projection type. The -R is
+# the range, which specify in the begining of the file. -O sets the Overlay mode, which
+# means there was code before this line. -K allows more code to be added to the plot
+
+################################################################################
+# Run once and comment out to save time. These steps might take a long time.
+
+# This line creates the grid image from xyz cordinate file.
+# If you already have the AlaskaMap.grd, then you don't need to run this line.
+#gmt xyz2grd  $xyzfile -G$grdfile -I1m/1m -R$range -V
+
+# This line creates the cpt file, which is where the colors of the map are stored.
+#gmt makecpt -Cglobe -T-6000/5000/20 -Z > $cptfile
+
+################################################################################
+# Everything that you add to the script will be sequentially plotted on top of the map.
+
+# Make the frame of the map. This is the first thing you should add to the file
+gmt psbasemap -Jm.25i -R$range -BNESW -Bya5 -Bxa5 -P -K -V > $psfile
+
+# This is the "wire frame" that the elevation is plotted
+#gmt grdimage $grdfile -J -R$range -C$cptfile -K -O -V >> $psfile
+
+# This plots the contour lines of the elevation.
+#gmt grdcontour $grdfile -J -R -C250 -K -O  >> $psfile
+
+# This plots the coastline.
+gmt pscoast -J -R -N1/2p -Da -W1p  -K -O -V >> $psfile
+#-Slightblue
+
+################################################################################
+# Plot nodes
+cat nodelocs.txt | awk '{print $3, $2}' | \
+gmt psxy -J -R -Sc.1 -Gred -K -O -V >> $psfile
+
+# Display text
+cat nodelocs.txt | awk '{print $3, $2, $1}' | \
+gmt pstext -J -R$range -F+f3p,Helvetica-Bold,black+jLT+a0 -K -O -N -V >> $psfile
+
+################################################################################
+
+# Plots the scale of the colors at the bottom of the map.
+#gmt psscale -C$cptfile -Dx4c/-.1c+w15c/.3c+hjTC -Bxaf -By+l"Elevation (m)" -Y-1.5 -X-4.5 -O -K -V >> $psfile
+
+# Open the file with default pdf (ps) viewer on your machine.
+open $psfile
