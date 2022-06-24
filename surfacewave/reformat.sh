@@ -10,13 +10,13 @@ do
     mkdir $dir
 done
 
-for i in `ls velocityout.*.txt`
+for i in `ls velocityout2d/velocityout.*.txt`
 do
-    period=`echo ${i:12:3}`
+    period=`echo ${i:26:8}`
     nodeNum=1
     for j in `cat $i | awk '{print $2}'`
     do
-        echo $j $period >> $(printf "%04d\n" $nodeNum)/velocities.txt
+        echo $period $j >> $(printf "%04d\n" $nodeNum)/velocities.txt
         ((nodeNum=nodeNum+1))
     done
 done
